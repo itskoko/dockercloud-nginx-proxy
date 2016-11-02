@@ -26,6 +26,15 @@ class TutumApi
   def url(path)
     'https://cloud.docker.com/api/app/v1' + path
   end
+
+  def http_get(path, params={})
+    params.merge!(limit: 100)
+    query =  "?" + params.map { |k,v| "#{k}=#{v}"}.join("&")
+    full_path = path
+    full_path += query unless params.empty?
+    response = RestClient.get(url(full_path), headers)
+    JSON.parse(response)
+  end
 end
 
 
