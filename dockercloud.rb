@@ -125,7 +125,7 @@ class Service
   def include?(mode, mode_options = {})
     @mode, @mode_options = mode, mode_options
     reload!
-    http? && running? && containers?
+    running? && containers?
   end
 
   def http?
