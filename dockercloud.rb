@@ -46,11 +46,13 @@ class NginxConf
     @renderer = ERB.new(TEMPLATE)
   end
 
-  def write(services, file)
-    @services = services
+  def write(hosts, file)
+    @hosts = hosts
 
-    @services.each do |service|
-      LOGGER.info service.name + ': ' + service.container_ips.inspect
+    @hosts.each do |host, services|
+      services.each do |service|
+        LOGGER.info "[#{host}] " + service.name + ': ' + service.container_ips.inspect
+      end
     end
 
     result = @renderer.result(binding) #rescue nil
@@ -197,17 +199,28 @@ class HttpServices
     @session = Tutum.new(tutum_auth: tutum_auth)
     @mode = mode
     @node = node
-    @services = get_services
+    @hosts = get_hosts
   end
 
   def write_conf(file_path)
     @nginx_conf ||= NginxConf.new()
-    @nginx_conf.write(@services, file_path)
+    @nginx_conf.write(@hosts, file_path)
     LOGGER.info 'Writing new nginx config'
     self
   end
 
   private
+
+  def get_hosts
+    hosts = {}
+    get_services.each do |service|
+      if service.host
+        hosts[service.host] ||= []
+        hosts[service.host] << service
+      end
+    end
+    hosts
+  end
 
   def get_services
     services = []
